@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Portal</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+        }
+
+        /* Верхняя панель поиска */
+        .search-wrapper {
+            background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%);
+            padding: 40px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .search-form {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr auto;
+            gap: 15px;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        input, select, .action-btn {
+            height: 48px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #0f172a;
+            color: white;
+            padding: 0 15px;
+            outline: none;
+        }
+
+        .action-btn {
+            background: var(--accent);
+            color: #0f172a;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            padding: 0 25px;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        
+        .counter-strip {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 15px 30px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .stat-num {
+            display: block;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        /* Список результатов */
+        .results-grid {
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .uni-item {
+            background: var(--card-bg);
+            margin-bottom: 20px;
+            padding: 25px;
+            border-radius: 16px;
+            border-left: 5px solid var(--accent);
+            transition: 0.3s;
+        }
+
+        .uni-item:hover {
+            background: #2d3748;
+        }
+
+        .tag-list {
+            margin: 15px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .type-badge {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-info {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+
+        .status-msg {
+            text-align: center;
+            margin: 20px 0;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="search-wrapper">
+        <div style="max-width: 900px; margin: 0 auto;">
+            <h1 class="field-label">Global Campus Explorer</h1>
+            <div class="search-form">
+                <select id="region-picker">
+                    <option value="USA">United States</option>
+                    <option value="Canada">Canada</option>
+                </select>
+                <input type="text" id="query-input" placeholder="Search by name...">
+                <button class="action-btn" id="trigger-search">Find Schools</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="counter-strip">
+        <div class="stat-card">
+            <span class="stat-num">4,891</span>
+            <small>Database</small>
+        </div>
+        <div class="stat-card">
+            <span class="stat-num">2</span>
+            <small>Regions</small>
+        </div>
+        <div class="stat-card">
+            <span class="stat-num" id="hit-count">0</span>
+            <small>Matches</small>
+        </div>
+    </div>
+
+    <div id="output-msg" class="status-msg"></div>
+    <main class="results-grid" id="entry-point"></main>
+
+    <script>
+        const DOM = {
+            searchField: document.getElementById('query-input'),
+            searchBtn: document.getElementById('trigger-search'),
+            region: document.getElementById('region-picker'),
+            counter: document.getElementById('hit-count'),
+            display: document.getElementById('entry-point'),
+            msg: document.getElementById('output-msg')
+        };
+
+        const SECURE_KEY = '54W5JOhCqSUO4F2nmY0etLOOY3qXQPDK34n177k2';
+
+        const renderUniversities = (list) => {
+            DOM.display.innerHTML = list.map(item => `
+                <article class="uni-item">
+                    <h2 style="margin:0 0 5px 0; font-size: 20px;">${item.name}</h2>
+                    <address style="font-style: normal; color: var(--text-dim); font-size: 14px;">
+                        ${item.city}, ${item.state} — ${item.country}
+                    </address>
+                    
+                    <div class="tag-list">
+                        ${item.degree_types.map(type => `<span class="type-badge">${type}</span>`).join('')}
+                    </div>
+
+                    <div class="meta-info">
+                        <span>👥 ${item.enrollment?.toLocaleString() || 'N/A'} Students</span>
+                        <span>📊 Ratio: ${item.student_faculty_ratio || 'N/A'}</span>
+                        <span>💰 Tuition: $${item.tuition || 'N/A'}</span>
+                    </div>
+                </article>
+            `).join('');
+        };
+
+        const fetchAcademics = async () => {
+            const keyword = DOM.searchField.value.trim();
+            const country = DOM.region.value;
+            const endpoint = `https://api.api-ninjas.com/v1/university?name=${keyword}&country=${country}`;
+
+            try {
+                const req = await fetch(endpoint, {
+                    headers: { 'X-Api-Key': SECURE_KEY }
+                });
+                const res = await req.json();
+
+                // Обновляем UI
+                DOM.counter.innerText = res.length;
+                DOM.msg.innerText = keyword ? `Found ${res.length} entries for "${keyword}"` : "";
+                renderUniversities(res);
+                
+            } catch (err) {
+                console.error("Data fetch failed", err);
+                DOM.msg.innerText = "Error loading data.";
+            }
+        };
+
+        DOM.searchBtn.addEventListener('click', fetchAcademics);
+        
+        // Поиск по нажатию Enter
+        DOM.searchField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') fetchAcademics();
+        });
+    </script>
+</body>
+</html>
